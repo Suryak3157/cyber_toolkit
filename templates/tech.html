@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-4 text-green-500">
+    Technology Fingerprint 🔍
+</h1>
+<!-- 🧠 TOOL DESCRIPTION -->
+
+<div class="mb-6 p-4 bg-gray-900 border border-green-500 rounded">
+
+    <h2 class="text-xl text-green-400 mb-2">About This Tool</h2>
+
+    <p class="text-green-300 text-sm mb-3">
+        Technology fingerprinting identifies the technologies used by a website,
+        including servers, frameworks, CMS platforms, and backend systems.
+        This information is useful during reconnaissance and helps in identifying
+        potential attack surfaces.
+    </p>
+
+    <ul class="list-disc ml-5 space-y-1 text-green-300 text-sm mb-4">
+        <li>Detect web servers (Apache, Nginx, IIS)</li>
+        <li>Identify frameworks (React, Angular, Vue)</li>
+        <li>Analyze backend technologies (PHP, Java)</li>
+        <li>Discover CDN and security configurations</li>
+    </ul>
+
+    <h2 class="text-green-400 mb-2">Detection Capabilities</h2>
+
+    <ul class="list-disc ml-5 space-y-1 text-green-300 text-sm">
+        <li>HTTP header analysis</li>
+        <li>JavaScript and script inspection</li>
+        <li>Cookie-based backend detection</li>
+        <li>Security header evaluation</li>
+    </ul>
+
+</div>
+
+<!-- INPUT -->
+
+<div class="mb-4">
+    <label class="block mb-1 text-green-400">Target URL</label>
+    <input id="target"
+        placeholder="Example: https://example.com"
+        class="w-full p-3 bg-black border border-green-500 rounded">
+</div>
+
+<!-- BUTTON -->
+
+<button id="scanBtn" onclick="scanTech()"
+ class="bg-green-600 px-4 py-2 rounded hover:bg-green-700">
+▶ Analyze Technology
+</button>
+
+<!-- LOADER -->
+
+<div id="loader" class="hidden mt-6">
+    <p class="text-green-400 mb-2">[+] Analyzing technologies...</p>
+    <p class="text-green-500 animate-pulse">
+        Detecting frameworks, headers, backend...
+    </p>
+
+    <div class="w-full bg-gray-800 rounded h-2 mt-2">
+        <div class="bg-green-500 h-2 rounded animate-pulse w-full"></div>
+    </div>
+</div>
+
+<!-- STATUS -->
+
+<div id="statusBox" class="mt-6 text-yellow-400">
+    Waiting for input...
+</div>
+
+<!-- OUTPUT -->
+
+<pre id="output"
+ class="mt-4 p-4 bg-black border border-green-500 rounded h-96 overflow-auto text-green-300">
+</pre>
+
+<script>
+function scanTech() {
+    const target = document.getElementById("target").value;
+    const btn = document.getElementById("scanBtn");
+
+    if (!target) {
+        alert("Enter target URL!");
+        return;
+    }
+
+    document.getElementById("loader").classList.remove("hidden");
+    document.getElementById("output").innerText = "";
+    document.getElementById("statusBox").innerText = "";
+
+    btn.disabled = true;
+    btn.innerText = "Analyzing...";
+
+    fetch("/tech", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({target: target})
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        document.getElementById("loader").classList.add("hidden");
+        btn.disabled = false;
+        btn.innerText = "▶ Analyze Technology";
+
+        if (data.status === "error") {
+            document.getElementById("statusBox").innerText = "[✖] Error";
+            document.getElementById("output").innerText = data.output;
+            return;
+        }
+
+        document.getElementById("statusBox").innerText = "[✔] Analysis Completed";
+
+        let output = data.output;
+
+        // small formatting boost
+        output = output.replace(/\[([A-Z ]+)\]/g, "\n[$1]\n----------------");
+
+        document.getElementById("output").innerText = output;
+    })
+    .catch(() => {
+        document.getElementById("loader").classList.add("hidden");
+        btn.disabled = false;
+        btn.innerText = "▶ Analyze Technology";
+        document.getElementById("statusBox").innerText = "[✖] Error occurred";
+    });
+}
+</script>
+
+{% endblock %}

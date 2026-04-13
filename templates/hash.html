@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-4 text-green-500">
+    Hash Analyzer 🔐
+</h1>
+<!-- 🧠 TOOL DESCRIPTION -->
+
+<div class="mb-6 p-4 bg-gray-900 border border-green-500 rounded">
+
+    <h2 class="text-xl text-green-400 mb-2">About This Tool</h2>
+
+    <p class="text-green-300 text-sm mb-3">
+        The Hash Analyzer tool is used to generate and analyze cryptographic hashes.
+        It supports multiple hashing algorithms and allows basic hash cracking using
+        a wordlist. This is useful in password auditing, digital forensics, and
+        security testing.
+    </p>
+
+    <ul class="list-disc ml-5 space-y-1 text-green-300 text-sm mb-4">
+        <li>Generate hashes (MD5, SHA1, SHA256)</li>
+        <li>Identify hash types</li>
+        <li>Attempt dictionary-based hash cracking</li>
+        <li>Support password analysis and investigations</li>
+    </ul>
+
+    <h2 class="text-green-400 mb-2">Capabilities</h2>
+
+    <ul class="list-disc ml-5 space-y-1 text-green-300 text-sm">
+        <li>Fast hash generation</li>
+        <li>Basic cracking using wordlists</li>
+        <li>Common hash type detection</li>
+        <li>Useful for penetration testing and forensic analysis</li>
+    </ul>
+
+</div>
+<!-- INPUT -->
+
+<div class="mb-6">
+    <input id="text"
+        placeholder="Enter text to hash"
+        class="w-full p-3 bg-black border border-green-500 rounded">
+    <button onclick="generateHash()" id="genBtn"
+        class="mt-2 bg-green-600 px-4 py-2 rounded hover:bg-green-700">
+        ▶ Generate Hash
+    </button>
+</div>
+
+<div class="mb-6">
+    <input id="hash"
+        placeholder="Enter hash to crack"
+        class="w-full p-3 bg-black border border-green-500 rounded">
+    <button onclick="crackHash()" id="crackBtn"
+        class="mt-2 bg-red-600 px-4 py-2 rounded hover:bg-red-700">
+        ▶ Crack Hash
+    </button>
+</div>
+
+<!-- PROGRESS BAR -->
+
+<div id="progressContainer" class="hidden mt-4">
+    <p class="text-green-400 mb-2">Cracking in progress...</p>
+    <div class="w-full bg-gray-800 rounded h-3">
+        <div id="progressBar" class="bg-green-500 h-3 rounded w-0"></div>
+    </div>
+</div>
+
+<!-- STATUS -->
+
+<div id="statusBox" class="mt-4 text-yellow-400">
+    Waiting for input...
+</div>
+
+<!-- OUTPUT -->
+
+<pre id="output"
+    class="mt-4 p-4 bg-black border border-green-500 rounded h-64 overflow-auto text-green-300">
+</pre>
+
+<script>
+
+// 🔐 Generate Hash
+function generateHash() {
+    const text = document.getElementById("text").value;
+
+    if (!text) return alert("Enter text!");
+
+    fetch("/hash_generate", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({text})
+    })
+    .then(res => res.json())
+    .then(data => {
+        const r = data.output;
+
+        document.getElementById("statusBox").innerText = "[✔] Hash Generated";
+
+        document.getElementById("output").innerText =
+            `MD5    : ${r.MD5}\n\n` +
+            `SHA1   : ${r.SHA1}\n\n` +
+            `SHA256 : ${r.SHA256}`;
+    });
+}
+
+
+// 💀 Crack Hash with Progress
+function crackHash() {
+    const hash = document.getElementById("hash").value;
+    const btn = document.getElementById("crackBtn");
+
+    if (!hash) return alert("Enter hash!");
+
+    btn.disabled = true;
+    btn.innerText = "Cracking...";
+
+    document.getElementById("progressContainer").classList.remove("hidden");
+    document.getElementById("output").innerText = "";
+    document.getElementById("statusBox").innerText = "";
+
+    let progress = 0;
+    const bar = document.getElementById("progressBar");
+
+    const interval = setInterval(() => {
+        progress += Math.random() * 10;
+        if (progress >= 90) progress = 90;
+        bar.style.width = progress + "%";
+    }, 300);
+
+    fetch("/hash_crack", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({hash})
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        clearInterval(interval);
+        bar.style.width = "100%";
+
+        setTimeout(() => {
+            document.getElementById("progressContainer").classList.add("hidden");
+            btn.disabled = false;
+            btn.innerText = "▶ Crack Hash";
+
+            document.getElementById("statusBox").innerText = "[✔] Completed";
+            document.getElementById("output").innerText = data.output;
+        }, 500);
+    })
+    .catch(() => {
+        clearInterval(interval);
+        btn.disabled = false;
+        btn.innerText = "▶ Crack Hash";
+    });
+}
+
+</script>
+
+{% endblock %}

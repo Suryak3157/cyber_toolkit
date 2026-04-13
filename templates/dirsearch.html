@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-4 text-green-500">
+    Dirsearch Scanner 🔍
+</h1>
+
+<!-- DESCRIPTION -->
+<div class="mb-6 p-4 bg-gray-900 border border-green-500 rounded">
+    <h2 class="text-xl text-green-400 mb-2">About This Tool</h2>
+
+    <p class="text-green-300 text-sm mb-3">
+        Discover hidden directories and sensitive endpoints on a web server.
+    </p>
+
+    <ul class="list-disc ml-5 space-y-1 text-green-300 text-sm">
+        <li>Find /admin, /login, /backup</li>
+        <li>Detect sensitive files</li>
+        <li>Identify exposed endpoints</li>
+    </ul>
+</div>
+
+<!-- INPUT -->
+<div class="mb-4">
+    <label class="block mb-1 text-green-400">Target URL</label>
+    <input id="target"
+        placeholder="Example: https://example.com"
+        class="w-full p-3 bg-black border border-green-500 rounded">
+</div>
+
+<!-- BUTTON -->
+<button id="scanBtn" onclick="runDirsearch()"
+ class="bg-green-600 px-5 py-2 rounded hover:bg-green-800">
+▶ Start Scan
+</button>
+
+<!-- LOADER -->
+<div id="loader" class="hidden mt-6">
+    <p class="text-green-400 mb-2">[+] Scanning in progress...</p>
+
+    <div class="w-full bg-gray-800 rounded h-3 overflow-hidden">
+        <div id="progressBar"
+            class="bg-green-500 h-3 rounded animate-pulse w-full">
+        </div>
+    </div>
+</div>
+
+<!-- STATUS -->
+<div id="statusBox" class="mt-6 text-yellow-400">
+    Waiting for input...
+</div>
+
+<!-- OUTPUT -->
+<pre id="outputBox"
+    class="mt-4 p-4 bg-black border border-green-500 rounded h-96 overflow-auto text-green-300">
+</pre>
+
+<!-- SCRIPT -->
+<script>
+function runDirsearch() {
+    const target = document.getElementById("target").value;
+    const btn = document.getElementById("scanBtn");
+
+    if (!target) {
+        alert("Enter target URL!");
+        return;
+    }
+
+    document.getElementById("statusBox").innerText = "";
+    document.getElementById("outputBox").innerText = "";
+    document.getElementById("loader").classList.remove("hidden");
+
+    btn.disabled = true;
+    btn.innerText = "Scanning...";
+
+    fetch("/api/dirsearch", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ target: target })
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        document.getElementById("loader").classList.add("hidden");
+        btn.disabled = false;
+        btn.innerText = "▶ Start Scan";
+
+        if (data.status === "error") {
+            document.getElementById("statusBox").innerText = "[✖] Error";
+            document.getElementById("outputBox").innerText =
+                JSON.stringify(data.output, null, 2);
+            return;
+        }
+
+        document.getElementById("statusBox").innerText = "[✔] Scan Completed";
+
+        const output = data.output;
+
+        let formatted = `
+===============================
+   DIRECTORY SCAN REPORT
+===============================
+
+Target        : ${output.Target}
+Total Found   : ${output["Total Found"]}
+Scan Type     : Fast Threaded Scan
+Status Codes  : 200 | 301 | 403
+
+-------------------------------
+DISCOVERED PATHS
+-------------------------------
+`;
+
+        if (output.Results && output.Results.length > 0) {
+            output.Results.forEach(item => {
+                let status = item.Status;
+
+                if (status === "200") {
+                    formatted += `[200] 🟢 ACCESSIBLE     → ${item.Path}\n`;
+                } else if (status === "301") {
+                    formatted += `[301] 🟡 REDIRECTED     → ${item.Path}\n`;
+                } else if (status === "403") {
+                    formatted += `[403] 🔴 FORBIDDEN      → ${item.Path}\n`;
+                } else {
+                    formatted += `[${status}] UNKNOWN → ${item.Path}\n`;
+                }
+            });
+        } else {
+            formatted += "No directories discovered\n";
+        }
+
+        formatted += `
+-------------------------------
+Scan Completed Successfully
+-------------------------------
+`;
+
+        document.getElementById("outputBox").innerText = formatted;
+    })
+    .catch(err => {
+        document.getElementById("loader").classList.add("hidden");
+        btn.disabled = false;
+        btn.innerText = "▶ Start Scan";
+        document.getElementById("statusBox").innerText = "[✖] Error occurred";
+    });
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,41 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment variables
+.env
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Reports (keep folder, ignore contents)
+reports/*
+!reports/.gitkeep
+
+# Ignore generated PDFs anywhere
+*.pdf
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# Temporary files
+*.tmp
+*.bak
+
+# Testing / coverage
+.coverage
+htmlcov/

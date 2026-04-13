@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-4 text-green-500">
+    Nmap Scanner 🔍
+</h1>
+
+<!-- 🧠 DESCRIPTION -->
+
+<div class="mb-6 p-4 bg-gray-900 border border-green-500 rounded">
+    <h2 class="text-xl text-green-400 mb-2">About This Tool</h2>
+
+    <p class="text-green-300 text-sm mb-3">
+        Nmap (Network Mapper) is used to discover hosts, open ports, services,
+        and operating systems on a target machine.
+    </p>
+
+    <ul class="list-disc ml-5 text-green-300 text-sm">
+        <li>Discover active hosts</li>
+        <li>Identify open ports</li>
+        <li>Detect services</li>
+        <li>OS fingerprinting</li>
+    </ul>
+</div>
+
+<!-- 🎯 TARGET -->
+
+<label class="block mb-1 text-green-400">Target (IP / Domain)</label>
+<input id="target"
+       placeholder="Example: scanme.nmap.org"
+       class="w-full p-3 rounded bg-gray-900 border border-green-500 mb-4">
+
+<!-- ⚙️ SCAN TYPE -->
+
+<label class="block mb-1 text-green-400">Scan Type</label>
+
+<div class="mb-4 text-green-300 text-sm space-y-1">
+    <label><input type="radio" name="scan_type" value="-F" checked onclick="togglePorts(false)"> Quick Scan (-F)</label><br>
+    <label><input type="radio" name="scan_type" value="-sS" onclick="togglePorts(false)"> SYN Scan (-sS)</label><br>
+    <label><input type="radio" name="scan_type" value="-sV" onclick="togglePorts(false)"> Service Detection (-sV)</label><br>
+    <label><input type="radio" name="scan_type" value="-O" onclick="togglePorts(false)"> OS Detection (-O)</label><br>
+    <label><input type="radio" name="scan_type" value="port" onclick="togglePorts(true)"> Port Scan (-p)</label>
+</div>
+
+<!-- 🔢 PORT INPUT (HIDDEN INITIALLY) -->
+
+<div id="portInputBox" class="mb-4 hidden">
+    <label class="block mb-1 text-green-400">Enter Ports (comma separated)</label>
+    <input id="ports"
+           placeholder="Example: 80,443,22"
+           class="w-full p-3 rounded bg-gray-900 border border-green-500">
+</div>
+
+<!-- ▶ BUTTON -->
+
+<button onclick="runNmap()"
+ class="bg-green-600 px-5 py-2 rounded hover:bg-green-700">
+▶ Run Scan
+</button>
+
+<!-- 🔄 STATUS -->
+
+<div id="statusBox" class="mt-6 text-yellow-400">
+    Waiting for input...
+</div>
+
+<!-- 🖥 OUTPUT -->
+
+<pre id="output"
+    class="mt-4 p-4 bg-black border border-green-500 rounded h-80 overflow-auto text-green-300">
+</pre>
+
+<!-- ⏳ LOADER -->
+
+<div id="loader" class="hidden mt-4 text-green-400">
+    [+] Scanning in progress...
+</div>
+
+<!-- 🚀 SCRIPT -->
+
+<script>
+function togglePorts(show) {
+    document.getElementById("portInputBox").classList.toggle("hidden", !show);
+}
+
+function runNmap() {
+    const target = document.getElementById("target").value;
+    const scanType = document.querySelector("input[name='scan_type']:checked")?.value;
+    const ports = document.getElementById("ports").value;
+
+    if (!target) {
+        alert("Enter target!");
+        return;
+    }
+
+    // ✅ If port scan selected, validate ports
+    if (scanType === "port" && !ports) {
+        alert("Enter ports (e.g., 80,443,22)");
+        return;
+    }
+
+    document.getElementById("statusBox").innerText = "[+] Running scan...";
+    document.getElementById("output").innerText = "";
+    document.getElementById("loader").classList.remove("hidden");
+
+    fetch("/nmap", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            target: target,
+            scan_type: scanType,
+            ports: ports
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        document.getElementById("loader").classList.add("hidden");
+
+        if (data.status === "error") {
+            document.getElementById("statusBox").innerText = "[✖] Error";
+            document.getElementById("output").innerText =
+                JSON.stringify(data.output, null, 2);
+            return;
+        }
+
+        // ✅ SHOW RESULT FIRST
+        let output = "";
+
+        if (typeof data.output === "object") {
+            output = data.output.Result || JSON.stringify(data.output, null, 2);
+        } else {
+            output = data.output;
+        }
+
+        document.getElementById("output").innerText = output;
+
+        // ✅ THEN SHOW COMPLETED
+        document.getElementById("statusBox").innerText = "[✔] Scan Completed";
+    })
+    .catch(() => {
+        document.getElementById("loader").classList.add("hidden");
+        document.getElementById("statusBox").innerText = "[✖] Error occurred";
+    });
+}
+</script>
+
+{% endblock %}

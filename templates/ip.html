@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-4 text-green-500">
+    IP Tracker 🌍
+</h1>
+
+<!-- DESCRIPTION -->
+
+<div class="mb-6 p-4 bg-gray-900 border border-green-500 rounded">
+    <h2 class="text-xl text-green-400 mb-2">About This Tool</h2>
+
+    <p class="text-green-300 text-sm mb-3">
+        IP tracking identifies geographical and network details of an IP address.
+    </p>
+
+    <ul class="list-disc ml-5 space-y-1 text-green-300 text-sm">
+        <li>Find location (country, city)</li>
+        <li>Identify ISP and organization</li>
+        <li>Support cyber investigations</li>
+    </ul>
+</div>
+
+<!-- INPUT -->
+
+<div class="mb-4">
+    <label class="block mb-1 text-green-400">IP Address</label>
+    <input id="ip"
+        placeholder="Example: 8.8.8.8"
+        class="w-full p-3 bg-black border border-green-500 rounded">
+</div>
+
+<!-- BUTTON -->
+
+<button onclick="trackIP()"
+ class="bg-green-600 px-4 py-2 rounded hover:bg-green-700">
+▶ Track IP </button>
+
+<!-- STATUS -->
+
+<div id="statusBox" class="mt-6 text-yellow-400">
+    Waiting for input...
+</div>
+
+<!-- OUTPUT -->
+
+<pre id="output"
+    class="mt-4 p-4 bg-black border border-green-500 rounded h-72 overflow-auto text-green-300">
+</pre>
+
+<!-- SCRIPT -->
+
+<script>
+function trackIP() {
+    const ip = document.getElementById("ip").value;
+
+    if (!ip) {
+        alert("Enter IP address!");
+        return;
+    }
+
+    document.getElementById("statusBox").innerText = "[+] Tracking IP...";
+    document.getElementById("output").innerText = "";
+
+    fetch("/ip_track", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ip: ip})
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if (data.status === "error") {
+            document.getElementById("statusBox").innerText = "[✖] Error";
+            document.getElementById("output").innerText = JSON.stringify(data.output, null, 2);
+            return;
+        }
+
+        document.getElementById("statusBox").innerText = "[✔] Lookup Completed";
+
+        let formatted = "";
+
+        for (const key in data.output) {
+            formatted += key + ": " + data.output[key] + "\n";
+        }
+
+        document.getElementById("output").innerText = formatted;
+    })
+    .catch(err => {
+        document.getElementById("statusBox").innerText = "[✖] Error occurred";
+    });
+}
+</script>
+
+{% endblock %}

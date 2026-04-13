@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-4 text-green-500">
+    Subdomain Finder 🚀
+</h1>
+
+<!-- 🧠 TOOL DESCRIPTION -->
+
+<div class="mb-6 p-4 bg-gray-900 border border-green-500 rounded">
+    <h2 class="text-xl text-green-400 mb-2">About This Tool</h2>
+
+    <p class="text-green-300 text-sm mb-3">
+        Subdomain enumeration is used to discover hidden or forgotten subdomains
+        of a target domain. These subdomains expose services, APIs, and potential attack surfaces.
+    </p>
+
+    <ul class="list-disc ml-5 space-y-1 text-green-300 text-sm">
+        <li>Discover hidden services</li>
+        <li>Map attack surface</li>
+        <li>Support penetration testing</li>
+        <li>Identify exposed endpoints</li>
+    </ul>
+</div>
+
+<!-- INPUT -->
+
+<div class="mb-4">
+    <label class="block mb-1 text-green-400">Target Domain</label>
+    <input id="domain"
+        placeholder="Example: google.com"
+        class="w-full p-3 bg-black border border-green-500 rounded">
+</div>
+
+<!-- BUTTON -->
+
+<button onclick="runSubdomain()"
+ class="bg-green-600 px-4 py-2 rounded hover:bg-green-700">
+▶ Find Subdomains
+</button>
+
+<!-- STATUS -->
+
+<div id="statusBox" class="mt-6 text-yellow-400">
+    Waiting for input...
+</div>
+
+<!-- OUTPUT -->
+
+<pre id="output"
+    class="mt-4 p-4 bg-black border border-green-500 rounded h-80 overflow-auto text-green-300">
+</pre>
+
+<!-- SCRIPT -->
+
+<script>
+function runSubdomain() {
+    const domain = document.getElementById("domain").value;
+
+    if (!domain) {
+        alert("Enter a domain!");
+        return;
+    }
+
+    document.getElementById("statusBox").innerText = "[+] Enumerating subdomains...";
+    document.getElementById("output").innerText = "";
+
+    fetch("/api/subdomain", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({domain: domain})
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if (data.status === "error") {
+            document.getElementById("statusBox").innerText = "[✖] Error";
+            document.getElementById("output").innerText =
+                JSON.stringify(data.output, null, 2);
+            return;
+        }
+
+        document.getElementById("statusBox").innerText = "[✔] Scan Completed";
+
+        const output = data.output;
+
+        let formatted = `
+Target        : ${output.Target}
+Total Found   : ${output["Total Found"]}
+
+-------------------------------
+SUBDOMAINS
+-------------------------------
+`;
+
+        if (output.Subdomains && output.Subdomains.length > 0) {
+            formatted += output.Subdomains.join("\n");
+        } else {
+            formatted += "No subdomains found";
+        }
+
+        document.getElementById("output").innerText = formatted;
+    })
+    .catch(err => {
+        document.getElementById("statusBox").innerText = "[✖] Error occurred";
+    });
+}
+</script>
+
+{% endblock %}

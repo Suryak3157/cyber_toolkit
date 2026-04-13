@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-4 text-green-500">
+    Whois Lookup 🌐
+</h1>
+
+<!-- 🧠 TOOL DESCRIPTION (FULLY MERGED) -->
+
+<div class="mb-6 p-4 bg-gray-900 border border-green-500 rounded">
+    <h2 class="text-xl text-green-400 mb-2">About This Tool</h2>
+
+
+<p class="text-green-300 text-sm mb-3">
+    Whois lookup retrieves registration details of a domain name.
+    It helps investigators identify domain owners, registrar details,
+    creation dates, expiry dates, and associated contact information.
+    Widely used in cyber forensics and OSINT investigations.
+</p>
+
+<p class="text-green-300 text-sm mb-2">
+    This tool is useful for:
+</p>
+
+<ul class="list-disc ml-5 space-y-1 text-green-300 text-sm mb-4">
+    <li>Identifying domain ownership and registration details</li>
+    <li>Analyzing registrar and hosting information</li>
+    <li>Tracking domain creation and expiry timelines</li>
+    <li>Supporting OSINT and forensic investigations</li>
+</ul>
+
+<!-- 📘 INFORMATION DETAILS -->
+<h2 class="text-green-400 mb-2">Information Retrieved</h2>
+<ul class="list-disc ml-5 space-y-1 text-green-300 text-sm">
+    <li>Domain owner / organization</li>
+    <li>Registrar details</li>
+    <li>Creation and expiry dates</li>
+    <li>Name servers</li>
+    <li>Contact information (if not hidden)</li>
+</ul>
+
+
+</div>
+
+<form method="POST" action="/whois" id="whoisForm">
+
+
+<!-- 🌐 DOMAIN INPUT -->
+<label class="block mb-1 text-green-400">Domain Name</label>
+<input type="text" name="domain" required
+       placeholder="Example: google.com or example.org"
+       class="w-full p-3 rounded bg-gray-900 border border-green-500 mb-4">
+
+<!-- ▶ BUTTON -->
+<button class="bg-green-600 px-5 py-2 rounded hover:bg-green-700">
+    ▶ Run Lookup
+</button>
+
+
+</form>
+
+<!-- 🔄 LOADER -->
+
+<div id="loader" class="hidden mt-6">
+    <p class="text-green-400">[+] Fetching domain information...</p>
+    <div class="w-full bg-gray-800 rounded h-3 mt-2">
+        <div class="bg-green-500 h-3 rounded animate-pulse w-full"></div>
+    </div>
+</div>
+
+<!-- 🖥 OUTPUT -->
+
+{% if result %}
+
+<div class="mt-6 bg-black border border-green-500 p-4 rounded overflow-auto max-h-96">
+    <h2 class="text-green-400 mb-3">Whois Result</h2>
+
+    {% if result.Error %}
+        <p class="text-red-400">{{ result.Error }}</p>
+    {% else %}
+        <div class="space-y-2 text-green-300 text-sm">
+            {% for key, value in result.items() %}
+                <p>
+                    <span class="text-green-400 font-semibold">{{ key }}:</span>
+                    
+                    {% if key == "IP Address" %}
+                        <span class="text-yellow-400">{{ value }}</span>
+                    {% else %}
+                        {{ value }}
+                    {% endif %}
+                    
+                </p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+</div>
+
+{% endif %}
+
+<!-- JS -->
+
+<script>
+    const form = document.getElementById("whoisForm");
+    const loader = document.getElementById("loader");
+
+    form.addEventListener("submit", () => {
+        loader.classList.remove("hidden");
+    });
+</script>
+
+{% endblock %}

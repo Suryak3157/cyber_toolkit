@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-4 text-green-500">
+    Web Vulnerability Scanner 🔍
+</h1>
+<!-- 🧠 TOOL DESCRIPTION -->
+
+<div class="mb-6 p-4 bg-gray-900 border border-green-500 rounded">
+
+    <h2 class="text-xl text-green-400 mb-2">About This Tool</h2>
+
+    <p class="text-green-300 text-sm mb-3">
+        The Web Vulnerability Scanner analyzes a target web application for common
+        security weaknesses and misconfigurations. It helps identify potential risks
+        such as insecure headers, exposed endpoints, and weak server configurations.
+    </p>
+
+    <ul class="list-disc ml-5 space-y-1 text-green-300 text-sm mb-4">
+        <li>Detect missing security headers</li>
+        <li>Identify exposed endpoints (admin/login)</li>
+        <li>Analyze server and response information</li>
+        <li>Highlight potential security misconfigurations</li>
+    </ul>
+
+    <h2 class="text-green-400 mb-2">Checks Performed</h2>
+
+    <ul class="list-disc ml-5 space-y-1 text-green-300 text-sm">
+        <li>HTTP response status analysis</li>
+        <li>Security headers validation (CSP, HSTS, X-Frame)</li>
+        <li>Basic technology identification</li>
+        <li>Common endpoint discovery</li>
+    </ul>
+
+</div>
+
+<!-- INPUT -->
+
+<div class="mb-4">
+    <label class="block mb-1 text-green-400">Target URL</label>
+    <input id="target"
+        placeholder="Example: https://example.com"
+        class="w-full p-3 bg-black border border-green-500 rounded">
+</div>
+
+<!-- BUTTON -->
+
+<button id="scanBtn" onclick="runScan()"
+ class="bg-green-600 px-5 py-2 rounded hover:bg-green-800">
+▶ Start Scan
+</button>
+
+<!-- LOADER -->
+
+<div id="loader" class="hidden mt-6">
+    <p class="text-green-400 mb-2">[+] Scanning target...</p>
+    <p class="text-green-500 text-sm animate-pulse">
+        Analyzing headers, paths, and configurations...
+    </p>
+</div>
+
+<!-- STATUS -->
+
+<div id="statusBox" class="mt-6 text-yellow-400">
+    Waiting for input...
+</div>
+
+<!-- OUTPUT -->
+
+<pre id="outputBox"
+    class="mt-4 p-4 bg-black border border-green-500 rounded h-96 overflow-auto text-green-300">
+</pre>
+
+<script>
+function runScan() {
+    const target = document.getElementById("target").value;
+    const btn = document.getElementById("scanBtn");
+
+    if (!target) {
+        alert("Enter target URL!");
+        return;
+    }
+
+    document.getElementById("loader").classList.remove("hidden");
+    document.getElementById("outputBox").innerText = "";
+    document.getElementById("statusBox").innerText = "";
+
+    btn.disabled = true;
+    btn.innerText = "Scanning...";
+
+    fetch("/api/web_vuln", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ target: target })
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        document.getElementById("loader").classList.add("hidden");
+        btn.disabled = false;
+        btn.innerText = "▶ Start Scan";
+
+        if (data.status === "error") {
+            document.getElementById("statusBox").innerText = "[✖] Error";
+            document.getElementById("outputBox").innerText =
+                JSON.stringify(data.output, null, 2);
+            return;
+        }
+
+        document.getElementById("statusBox").innerText = "[✔] Scan Completed";
+
+        const o = data.output;
+
+        let formatted = `
+Target        : ${o.Target}
+Status        : ${o.Status}
+
+-------------------------------
+SERVER INFO
+-------------------------------
+Server        : ${o["Server"]}
+Content-Type  : ${o["Content-Type"]}
+
+-------------------------------
+SECURITY HEADERS
+-------------------------------
+`;
+
+        for (let key in o.Headers) {
+            let val = o.Headers[key];
+            formatted += `${key} : ${val === "Present" ? "✅" : "❌"}\n`;
+        }
+
+        formatted += `
+-------------------------------
+FINDINGS
+-------------------------------
+`;
+
+        if (o.Findings.length > 0) {
+            o.Findings.forEach(f => formatted += `⚠ ${f}\n`);
+        } else {
+            formatted += "No major issues found\n";
+        }
+
+        formatted += `
+-------------------------------
+EXPOSED PATHS
+-------------------------------
+`;
+
+        if (o["Exposed Paths"].length > 0) {
+            o["Exposed Paths"].forEach(p => formatted += `[+] ${p}\n`);
+        } else {
+            formatted += "No common paths found\n";
+        }
+
+        document.getElementById("outputBox").innerText = formatted;
+    })
+    .catch(err => {
+        document.getElementById("loader").classList.add("hidden");
+        btn.disabled = false;
+        btn.innerText = "▶ Start Scan";
+        document.getElementById("statusBox").innerText = "[✖] Error occurred";
+    });
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cyber Toolkit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+</head>
+
+<body class="bg-black text-green-400 font-mono">
+
+<!-- 🔥 SIDEBAR -->
+<div class="w-64 fixed top-0 left-0 h-full bg-gray-900 p-5 border-r border-green-500 overflow-y-auto">
+
+    <!-- 🔴 TOP BAR -->
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-bold text-green-500">
+            CyberSuite
+        </h2>
+
+        <!-- Logout Icon -->
+        <a href="/logout" title="Logout" class="text-red-500 hover:text-red-400">
+            <i data-feather="log-out"></i>
+        </a>
+    </div>
+
+    <!-- Case Info -->
+    <div class="mb-6 text-sm text-green-300 border-b border-green-700 pb-3">
+        <p><b>Case:</b> {{ session.get('case_number') }}</p>
+        <p><b>Name:</b> {{ session.get('person_name') }}</p>
+    </div>
+
+    <!-- MENU -->
+    <ul class="space-y-3">
+
+        <li>
+            <a href="/index"
+               class="block p-2 rounded 
+               {% if active_page == 'dashboard' %}bg-green-900{% else %}hover:bg-green-900{% endif %}">
+               🏠 Dashboard
+            </a>
+        </li>
+
+        <li><a href="/ping_page" class="block p-2 rounded {% if active_page=='ping' %}bg-green-900{% else %}hover:bg-green-900{% endif %}">📡 Ping Tool</a></li>
+        <li><a href="/nmap_page" class="block p-2 rounded {% if active_page=='nmap' %}bg-green-900{% else %}hover:bg-green-900{% endif %}">🛰 Nmap</a></li>
+        <li><a href="/whois_page" class="block p-2 rounded {% if active_page=='whois' %}bg-green-900{% else %}hover:bg-green-900{% endif %}">🌐 Whois</a></li>
+        <li><a href="/dns_page" class="block p-2 rounded {% if active_page=='dns' %}bg-green-900{% else %}hover:bg-green-900{% endif %}">📘 DNS</a></li>
+        <li><a href="/subdomain_page" class="block p-2 rounded {% if active_page=='subdomain' %}bg-green-900{% else %}hover:bg-green-900{% endif %}">🧩 Subdomains</a></li>
+        <li><a href="/dirsearch_page" class="block p-2 rounded {% if active_page=='dirsearch' %}bg-green-900{% else %}hover:bg-green-900{% endif %}">📂 Dirsearch</a></li>
+        <li><a href="/web_vuln_page" class="block p-2 rounded {% if active_page=='web_vuln' %}bg-green-900{% else %}hover:bg-green-900{% endif %}">💻 Web Scanner</a></li>
+        <li><a href="/hash_page" class="block p-2 rounded {% if active_page=='hash' %}bg-green-900{% else %}hover:bg-green-900{% endif %}">🔐 Hash</a></li>
+        <li><a href="/ip_page" class="block p-2 rounded {% if active_page=='ip' %}bg-green-900{% else %}hover:bg-green-900{% endif %}">🌍 IP Tracker</a></li>
+        <li><a href="/tech_page" class="block p-2 rounded {% if active_page=='tech' %}bg-green-900{% else %}hover:bg-green-900{% endif %}">⚙ Tech</a></li>
+        <li><a href="/sql_page" class="block p-2 rounded {% if active_page=='sql' %}bg-green-900{% else %}hover:bg-green-900{% endif %}">💀 SQL Scanner</a></li>
+
+    </ul>
+
+</div>
+
+<!-- 🔥 MAIN CONTENT -->
+<div class="ml-64 p-10 min-h-screen">
+    {% block content %}{% endblock %}
+</div>
+
+<!-- ICON SCRIPT -->
+<script>
+    feather.replace()
+</script>
+
+</body>
+</html>
